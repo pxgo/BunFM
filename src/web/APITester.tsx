@@ -1,14 +1,14 @@
 import React, { useRef, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/select.tsx";
+import { cn } from "@/lib/utils.ts";
 
 export function APITester() {
   const responseInputRef = useRef<HTMLTextAreaElement>(null);
