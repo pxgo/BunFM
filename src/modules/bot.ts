@@ -31,10 +31,9 @@ class BotModule {
     this.bot.onText(/\/help/, async (message) => {
       this.sendTextMessageSync(
         message.chat.id,
-        `[/help] Output help info
-[/list] Output the list of audios
-[/rm index] Delete the audio file
-          `,
+        `[/help] Displays help information
+[/list] Displays the list of audio files
+[/rm <index>] Delete the specified audio file`,
       );
     });
     this.bot.onText(/\/rm ([0-9]+)/, async (message, match) => {
