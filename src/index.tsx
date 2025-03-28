@@ -15,8 +15,8 @@ main().catch(loggerModule.error);
 
 const server = serve({
   routes: {
-    "/*": index,
-    "/fm": {
+    // "/*": index,
+    "/*": {
       async GET(req) {
         let handle: null | ((chunk: Uint8Array) => void) = null;
         const stream = new ReadableStream({
