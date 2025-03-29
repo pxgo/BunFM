@@ -1,4 +1,4 @@
-import { timeModule } from "@/modules/time.ts";
+import { timeModule } from "./time";
 class LoggerModule {
   debug(...args: any[]) {
     console.log(`[${timeModule.now()}][DEBUG]`, ...args);

@@ -1,17 +1,24 @@
-import { envSettings } from "@/settings/env.ts";
-import { mediaModule } from "@/modules/media.ts";
-import EventEmitter from "eventemitter3";
-import { loggerModule } from "@/modules/logger.ts";
-import { timeModule } from "@/modules/time.ts";
-import { audioModule } from "@/modules/audio.ts";
+import { envSettings } from "../settings/env";
+import { mediaModule } from "./media";
+import { EventEmitter } from "eventemitter3";
+import { loggerModule } from "./logger";
+import { timeModule } from "./time";
+import { audioModule } from "./audio";
+import { ChildProcess } from "child_process";
 
 interface IEvents {
-  fmData: (chunk: Uint8Array) => void;
+  fmData: (chunk: Buffer) => void;
 }
 
 class FMModule extends EventEmitter<IEvents> {
   currentMediaIndex: number = -1;
+  specifiedMediaIndex: number | null = null;
+
+  readerTask: ChildProcess | null = null;
+
   from: "file" | "muteAudio" = "muteAudio";
+
+  stopped: boolean = false;
 
   constructor() {
     super();
@@ -20,7 +27,7 @@ class FMModule extends EventEmitter<IEvents> {
     });
   }
 
-  private emitFMData(from: "file" | "muteAudio", chunk: Uint8Array) {
+  private emitFMData(from: "file" | "muteAudio", chunk: Buffer) {
     if (from === this.from) {
       this.emit("fmData", chunk);
     }
@@ -29,26 +36,37 @@ class FMModule extends EventEmitter<IEvents> {
   async init() {
     while (true) {
       this.from = "muteAudio";
+
+      // 暂停
+      if (this.stopped) {
+        await timeModule.sleep(2000);
+        continue;
+      }
+
       try {
-        const medias = await mediaModule.getMediasInfo();
-        if (medias.length === 0) {
-          loggerModule.info("No audio file found.");
+        const mediaInfo = await this.getNextMediaInfo();
+        if (mediaInfo === null) {
           await timeModule.sleep(2000);
           continue;
         }
-        const nextMediaIndex = this.getNextMediaIndex(medias.length);
-        const mediaInfo = medias[nextMediaIndex];
-        await audioModule.readAudioFile(mediaInfo.filePath, (chunk) => {
-          this.from = "file";
-          this.emitFMData("file", chunk);
-        });
+        await audioModule.readAudioFile(
+          mediaInfo.filePath,
+          (task) => {
+            this.readerTask = task;
+          },
+          (buffer) => {
+            this.from = "file";
+            this.emitFMData("file", buffer);
+          },
+        );
       } catch (err) {
         loggerModule.error(err);
         await timeModule.sleep(2000);
       }
     }
   }
-  getNextMediaIndex(mediaCount: number) {
+
+  resetMediaIndex(mediaCount: number) {
     let nextMediaIndex: number;
     if (envSettings.randomOrder) {
       nextMediaIndex = Math.floor(Math.random() * (mediaCount + 1));
@@ -60,7 +78,53 @@ class FMModule extends EventEmitter<IEvents> {
       }
     }
     this.currentMediaIndex = nextMediaIndex;
-    return nextMediaIndex;
+  }
+
+  async getNextMediaInfo() {
+    const medias = await mediaModule.getMediasInfo();
+    if (this.specifiedMediaIndex !== null) {
+      const media = medias[this.specifiedMediaIndex] || null;
+      this.specifiedMediaIndex = null;
+      return media;
+    } else {
+      this.resetMediaIndex(medias.length);
+      return medias[this.currentMediaIndex] || null;
+    }
+  }
+
+  async next() {
+    await this.stop();
+    await this.play();
+  }
+
+  async play(order?: string) {
+    if (order !== undefined) {
+      const media = await mediaModule.getMediaByOrderString(order);
+      this.specifiedMediaIndex = media.order - 1;
+    }
+
+    this.from = "muteAudio";
+    this.stopped = false;
+
+    this.killReaderTask();
+  }
+
+  async stop() {
+    this.from = "muteAudio";
+    this.stopped = true;
+    this.killReaderTask();
+  }
+
+  killReaderTask() {
+    const task = this.readerTask;
+    if (task && !task.killed) {
+      task.kill("SIGKILL");
+      setTimeout(() => {
+        if (!task.killed) {
+          task.kill("SIGKILL");
+        }
+      }, 1000);
+    }
   }
 }
 

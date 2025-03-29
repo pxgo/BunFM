@@ -1,15 +1,17 @@
 import fs from "fs";
-import { envSettings } from "@/settings/env.ts";
-import type { IMedia } from "@/settings/media.ts";
+import { envSettings } from "../settings/env";
+import type { IMedia } from "../settings/media";
 import path from "path";
 
 class MediaModule {
   async getMediasInfo() {
     const medias: IMedia[] = [];
     const filenames = await fs.promises.readdir(envSettings.mediaDir);
-    for (const filename of filenames) {
+    for (let i = 0; i < filenames.length; i++) {
+      const filename = filenames[i];
       const filePath = path.resolve(envSettings.mediaDir, filename);
       medias.push({
+        order: i + 1,
         filename,
         filePath,
       });
@@ -20,6 +22,19 @@ class MediaModule {
   async getMediaNames() {
     const medias = await this.getMediasInfo();
     return medias.map((media) => media.filename);
+  }
+
+  async getMediaByOrderString(order: string) {
+    const orderNumber = parseInt(order);
+    if (isNaN(orderNumber)) {
+      throw new Error("文件序号格式错误。");
+    }
+    const medias = await this.getMediasInfo();
+    if (orderNumber < 1 || orderNumber > medias.length) {
+      throw new Error("文件序号无效。");
+    }
+    console.log({ orderNumber, medias });
+    return medias[orderNumber - 1];
   }
 }
 

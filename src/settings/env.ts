@@ -1,12 +1,13 @@
 import dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
-import { loggerModule } from "@/modules/logger.ts";
+import { loggerModule } from "../modules/logger";
 dotenv.config();
 
 class EnvSettings {
-  botToken: string = process.env.BUN_FM_BOT_TOKEN;
-
+  host: string = process.env.BUN_FM_HOST || "127.0.0.1";
+  port: number = parseInt(process.env.BUN_FM_PORT || "7080");
+  botToken: string = process.env.BUN_FM_BOT_TOKEN || "";
   tmpDir: string = process.env.BUN_FM_TMP_DIR || "./tmp";
   mediaDir: string = process.env.BUN_FM_AUDIO_DIR || "./media";
   randomOrder: boolean = process.env.BUN_FM_RANDOM_ORIGIN === "true";

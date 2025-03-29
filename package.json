@@ -1,42 +1,26 @@
 {
-  "name": "bun-react-template",
-  "version": "0.1.0",
+  "name": "bun-fm",
+  "version": "0.1.1",
   "private": true,
-  "type": "module",
-  "main": "src/index.tsx",
-  "module": "src/index.tsx",
+  "main": "dist/index.js",
   "scripts": {
-    "dev": "bun --hot src/index.tsx",
-    "start": "NODE_ENV=production bun src/index.tsx",
-    "build": "bun run build.ts"
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "start": "NODE_ENV=production node dist/index.js",
+    "start-ts": "ts-node src/index.ts",
+    "build": "tsc"
   },
   "dependencies": {
-    "@hookform/resolvers": "^4.1.0",
-    "@radix-ui/react-label": "^2.1.2",
-    "@radix-ui/react-select": "^2.1.6",
-    "@radix-ui/react-slot": "^1.1.2",
-    "bun-plugin-tailwind": "^0.0.14",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
     "eventemitter3": "^5.0.1",
     "express": "^4.21.2",
-    "lucide-react": "^0.475.0",
-    "node-telegram-bot-api": "^0.66.0",
-    "react": "^19",
-    "react-dom": "^19",
-    "react-hook-form": "^7.54.2",
-    "tailwind-merge": "^3.0.1",
-    "tailwindcss": "^4.0.6",
-    "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.24.2"
+    "typescript": "^5.6.3",
+    "node-telegram-bot-api": "^0.66.0"
   },
   "devDependencies": {
-    "@types/bun": "latest",
+    "nodemon": "^3.1.7",
+    "@types/express": "^5.0.1",
     "@types/node-telegram-bot-api": "^0.64.8",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
     "prettier": "^3.5.3"
   }
 }

@@ -1,2 +1,3 @@
 # BunFM
-BunFM is a real-time audio streaming service built with Bun, enabling synchronized playback across multiple clients and controlled via a Telegram Bot.
+
+BunFM is a real-time audio streaming service built with NodeJS, enabling synchronized playback across multiple clients and controlled via a Telegram Bot.
