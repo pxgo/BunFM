@@ -60,6 +60,7 @@ class FMModule extends EventEmitter<IEvents> {
           },
         );
       } catch (err) {
+        this.from = "muteAudio";
         loggerModule.error(err);
         await timeModule.sleep(2000);
       }
@@ -101,6 +102,7 @@ class FMModule extends EventEmitter<IEvents> {
     if (order !== undefined) {
       const media = await mediaModule.getMediaByOrderString(order);
       this.specifiedMediaIndex = media.order - 1;
+      this.currentMediaIndex = this.specifiedMediaIndex;
     }
 
     this.from = "muteAudio";
