@@ -77,8 +77,8 @@ class BotModule {
       new RegExp(`^\/${botSettings.commands.start.command}$`, "i"),
       (message) => {
         let text = `欢迎使用 BunFM! 🎉🎉🎉\n\n`;
-        text += `在线收听请访问：${envSettings.getDomain()}\n`;
-        text += `服务已稳定运行：${fmModule.getRunningTime()}\n\n`;
+        text += `在线收听：${envSettings.getDomain()}\n`;
+        text += `服务已运行：${fmModule.getRunningTime()}\n\n`;
         text += `命令列表：\n`;
         text += Object.values(botSettings.commands)
           .map((item) => {
