@@ -33,7 +33,6 @@ class MediaModule {
     if (orderNumber < 1 || orderNumber > medias.length) {
       throw new Error("文件序号无效。");
     }
-    console.log({ orderNumber, medias });
     return medias[orderNumber - 1];
   }
 }

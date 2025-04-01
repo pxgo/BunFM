@@ -11,6 +11,7 @@ class EnvSettings {
   tmpDir: string = process.env.BUN_FM_TMP_DIR || "./tmp";
   mediaDir: string = process.env.BUN_FM_AUDIO_DIR || "./media";
   randomOrder: boolean = process.env.BUN_FM_RANDOM_ORIGIN === "true";
+  customDomain: string = process.env.BUN_FM_DOMAIN || "";
 
   constructor() {
     if (!this.botToken) {
@@ -26,6 +27,10 @@ class EnvSettings {
     }
     fs.mkdirSync(dir, { recursive: true });
     return dir;
+  }
+
+  getDomain() {
+    return this.customDomain || `http://${this.host}:${this.port}`;
   }
 }
 

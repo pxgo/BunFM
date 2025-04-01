@@ -23,14 +23,13 @@ class BotModule {
     this.initListCommand();
     this.initRemoveCommand();
     this.initAudioMessage();
-    this.initGetCommand();
-    this.initPlayCommand();
-    this.initStopCommand();
+    this.initMuteCommand();
     this.initNextCommand();
   }
 
   async sendTextMessage(chatId: number, message: string, messageId?: number) {
-    await this.bot.sendMessage(
+    loggerModule.debug(message);
+    return await this.bot.sendMessage(
       chatId,
       message,
       messageId === undefined
@@ -39,7 +38,6 @@ class BotModule {
             reply_to_message_id: messageId,
           },
     );
-    loggerModule.debug(message);
   }
 
   sendTextMessageSync(chatId: number, message: string, messageId?: number) {
@@ -79,7 +77,9 @@ class BotModule {
       new RegExp(`^\/${botSettings.commands.start.command}$`, "i"),
       (message) => {
         let text = `欢迎使用 BunFM! 🎉🎉🎉\n\n`;
-        text += `在线收听请访问：https://fm.lockai.net\n\n`;
+        text += `在线收听请访问：${envSettings.getDomain()}\n`;
+        text += `服务已稳定运行：${fmModule.getRunningTime()}\n\n`;
+        text += `命令列表：\n`;
         text += Object.values(botSettings.commands)
           .map((item) => {
             return `/${item.command} - ${item.description}`;
@@ -92,21 +92,29 @@ class BotModule {
 
   initListCommand() {
     this.bot.onText(
-      new RegExp(`^\/${botSettings.commands.list.command}$`, "i"),
+      new RegExp(`^\/${botSettings.commands.ls.command}$`, "i"),
       async (message) => {
         try {
           const medias = await mediaModule.getMediaNames();
-          let text: string;
           if (medias.length === 0) {
-            text = `共找到 ${medias.length} 个文件。`;
+            const text = `共找到 ${medias.length} 个音频文件。`;
+            this.sendTextMessageSync(message.chat.id, text, message.message_id);
           } else {
-            text = `共找到 ${medias.length} 个文件: \n\n`;
-            text += medias
-              .map((name, index) => `${index + 1}. ${name}`)
-              .join("\n");
+            const perPage = 20;
+            for (let i = 0; i < medias.length; i += perPage) {
+              let text =
+                i === 0 ? `共找到 ${medias.length} 个音频文件: \n\n` : "";
+              text += medias
+                .slice(i, i + perPage)
+                .map((name, index) => `[${i + index + 1}] ${name}`)
+                .join("\n");
+              await this.sendTextMessage(
+                message.chat.id,
+                text,
+                i === 0 ? message.message_id : undefined,
+              );
+            }
           }
-
-          this.sendTextMessageSync(message.chat.id, text, message.message_id);
         } catch (err) {
           this.sendErrorMessageSync(
             message.chat.id,
@@ -120,7 +128,7 @@ class BotModule {
 
   initRemoveCommand() {
     this.bot.onText(
-      new RegExp(`^\/${botSettings.commands.remove.command} ([0-9]+)$`, "i"),
+      new RegExp(`^\/${botSettings.commands.rm.command} ([0-9]+)$`, "i"),
       async (message, match) => {
         const chatId = message.chat.id;
         try {
@@ -129,11 +137,7 @@ class BotModule {
           );
           await fs.promises.unlink(mediaInfo.filePath);
 
-          this.sendTextMessageSync(
-            chatId,
-            `删除文件成功。\n\n文件：${mediaInfo.filename}`,
-            message.message_id,
-          );
+          this.sendTextMessageSync(chatId, `Done`, message.message_id);
         } catch (err) {
           this.sendErrorMessageSync(chatId, err as Error, message.message_id);
         }
@@ -141,77 +145,18 @@ class BotModule {
     );
   }
 
-  initGetCommand() {
+  initMuteCommand() {
     this.bot.onText(
-      new RegExp(`^\/${botSettings.commands.get.command} ([0-9]+)$`, "i"),
-      async (message, match) => {
+      new RegExp(`^\/${botSettings.commands.mute.command}$`, "i"),
+      async (message) => {
         const chatId = message.chat.id;
         try {
-          const mediaInfo = await mediaModule.getMediaByOrderString(
-            match ? match[1] : "",
-          );
+          const muted = await fmModule.mute();
           this.sendTextMessageSync(
             chatId,
-            `发送中，请稍后...\n\n文件：${mediaInfo.filename}`,
+            muted ? "已设置静音" : `已取消静音`,
             message.message_id,
           );
-          this.bot.sendAudio(chatId, mediaInfo.filePath).catch((err) => {
-            this.sendErrorMessageSync(chatId, err, message.message_id);
-          });
-        } catch (err) {
-          this.sendErrorMessageSync(
-            message.chat.id,
-            err as Error,
-            message.message_id,
-          );
-        }
-      },
-    );
-  }
-
-  initStopCommand() {
-    this.bot.onText(
-      new RegExp(`^\/${botSettings.commands.stop.command}$`, "i"),
-      async (message) => {
-        const chatId = message.chat.id;
-        try {
-          await fmModule.stop();
-          this.sendTextMessageSync(chatId, `操作成功`, message.message_id);
-        } catch (err) {
-          this.sendErrorMessageSync(
-            message.chat.id,
-            err as Error,
-            message.message_id,
-          );
-        }
-      },
-    );
-  }
-
-  initPlayCommand() {
-    this.bot.onText(
-      new RegExp(`^\/${botSettings.commands.play.command} ([0-9]+)$`, "i"),
-      async (message, match) => {
-        const chatId = message.chat.id;
-        try {
-          await fmModule.play(match ? match[1] : undefined);
-          this.sendTextMessageSync(chatId, `操作成功`, message.message_id);
-        } catch (err) {
-          this.sendErrorMessageSync(
-            message.chat.id,
-            err as Error,
-            message.message_id,
-          );
-        }
-      },
-    );
-    this.bot.onText(
-      new RegExp(`^\/${botSettings.commands.play.command}$`, "i"),
-      async (message) => {
-        const chatId = message.chat.id;
-        try {
-          await fmModule.play();
-          this.sendTextMessageSync(chatId, `操作成功`, message.message_id);
         } catch (err) {
           this.sendErrorMessageSync(
             message.chat.id,
@@ -230,7 +175,7 @@ class BotModule {
         const chatId = message.chat.id;
         try {
           await fmModule.next();
-          this.sendTextMessageSync(chatId, `操作成功`, message.message_id);
+          this.sendTextMessageSync(chatId, `Done`, message.message_id);
         } catch (err) {
           this.sendErrorMessageSync(
             message.chat.id,
@@ -252,18 +197,17 @@ class BotModule {
       // @ts-ignore
       const fileName = audio.file_name;
       try {
-        await this.sendTextMessage(
+        const r = await this.sendTextMessage(
           chatId,
-          `正在下载文件...\n\n文件：${fileName}`,
+          `正在下载音频文件，请稍后...`,
           messageId,
         );
         const mediaNames = await mediaModule.getMediaNames();
         if (mediaNames.includes(fileName)) {
-          await this.sendTextMessage(
-            chatId,
-            `下载已取消，存在同名文件。\n\n文件：${fileName}`,
-            messageId,
-          );
+          await this.bot.editMessageText(`下载已取消，存在同名文件。`, {
+            chat_id: chatId,
+            message_id: r.message_id,
+          });
           return;
         }
         const tmpFilePath = await this.bot.downloadFile(
@@ -273,11 +217,10 @@ class BotModule {
         const mediaFilePath = path.resolve(envSettings.mediaDir, fileName);
         await fs.promises.rename(tmpFilePath, mediaFilePath);
 
-        await this.sendTextMessage(
-          chatId,
-          `文件下载成功。\n\n文件：${fileName}`,
-          messageId,
-        );
+        await this.bot.editMessageText(`文件下载成功。`, {
+          chat_id: chatId,
+          message_id: r.message_id,
+        });
       } catch (err) {
         this.sendErrorMessageSync(chatId, err as Error, message.message_id);
       }

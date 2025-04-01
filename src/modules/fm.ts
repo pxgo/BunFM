@@ -5,20 +5,23 @@ import { loggerModule } from "./logger";
 import { timeModule } from "./time";
 import { audioModule } from "./audio";
 import { ChildProcess } from "child_process";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
+dayjs.extend(duration);
 
 interface IEvents {
   fmData: (chunk: Buffer) => void;
 }
 
 class FMModule extends EventEmitter<IEvents> {
+  startupTime = Date.now();
   currentMediaIndex: number = -1;
-  specifiedMediaIndex: number | null = null;
+
+  muted: boolean = false;
 
   readerTask: ChildProcess | null = null;
 
   from: "file" | "muteAudio" = "muteAudio";
-
-  stopped: boolean = false;
 
   constructor() {
     super();
@@ -27,21 +30,49 @@ class FMModule extends EventEmitter<IEvents> {
     });
   }
 
+  getRunningTime() {
+    const now = Date.now();
+    const diffMs = now - this.startupTime;
+    const duration = dayjs.duration(diffMs);
+    const years = duration.years();
+    const days = duration.days();
+    const hours = duration.hours();
+    const minutes = duration.minutes();
+    const seconds = duration.seconds();
+
+    const textArr = [];
+    if (years > 0) {
+      textArr.push(`${years}y`);
+    }
+    if (days > 0) {
+      textArr.push(`${days}d`);
+    }
+    if (hours > 0) {
+      textArr.push(`${hours}h`);
+    }
+    if (minutes > 0) {
+      textArr.push(`${minutes}m`);
+    }
+    if (seconds > 0) {
+      textArr.push(`${seconds}s`);
+    }
+
+    return textArr.join(" ");
+  }
+
   private emitFMData(from: "file" | "muteAudio", chunk: Buffer) {
-    if (from === this.from) {
-      this.emit("fmData", chunk);
+    if (this.muted) {
+      if (from === "muteAudio") {
+        return this.emit("fmData", chunk);
+      }
+    } else if (from === this.from) {
+      return this.emit("fmData", chunk);
     }
   }
 
   async init() {
     while (true) {
       this.from = "muteAudio";
-
-      // 暂停
-      if (this.stopped) {
-        await timeModule.sleep(2000);
-        continue;
-      }
 
       try {
         const mediaInfo = await this.getNextMediaInfo();
@@ -83,49 +114,24 @@ class FMModule extends EventEmitter<IEvents> {
 
   async getNextMediaInfo() {
     const medias = await mediaModule.getMediasInfo();
-    if (this.specifiedMediaIndex !== null) {
-      const media = medias[this.specifiedMediaIndex] || null;
-      this.specifiedMediaIndex = null;
-      return media;
-    } else {
-      this.resetMediaIndex(medias.length);
-      return medias[this.currentMediaIndex] || null;
-    }
+    this.resetMediaIndex(medias.length);
+    return medias[this.currentMediaIndex] || null;
   }
 
   async next() {
-    await this.stop();
-    await this.play();
-  }
-
-  async play(order?: string) {
-    if (order !== undefined) {
-      const media = await mediaModule.getMediaByOrderString(order);
-      this.specifiedMediaIndex = media.order - 1;
-      this.currentMediaIndex = this.specifiedMediaIndex;
-    }
-
     this.from = "muteAudio";
-    this.stopped = false;
-
     this.killReaderTask();
   }
 
-  async stop() {
-    this.from = "muteAudio";
-    this.stopped = true;
-    this.killReaderTask();
+  async mute() {
+    this.muted = !this.muted;
+    return this.muted;
   }
 
   killReaderTask() {
     const task = this.readerTask;
     if (task && !task.killed) {
       task.kill("SIGKILL");
-      setTimeout(() => {
-        if (!task.killed) {
-          task.kill("SIGKILL");
-        }
-      }, 1000);
     }
   }
 }
