@@ -1,4 +1,4 @@
-import packageJSON from "../../package.json";
+const packageJSON = require("../../package.json");
 class MetadataSettings {
   nickname = packageJSON.nickname;
   description = packageJSON.description;
