@@ -9,7 +9,7 @@ class LoggerModule {
   }
 
   info(...args: any[]) {
-    console.info(`[${timeModule.now()}][ERROR]`, ...args);
+    console.info(`[${timeModule.now()}][INFO]`, ...args);
   }
 
   errorExit(...args: any[]) {

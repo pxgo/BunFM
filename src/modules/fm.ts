@@ -16,13 +16,9 @@ interface IEvents {
 class FMModule extends EventEmitter<IEvents> {
   startupTime = Date.now();
   currentMediaIndex: number = -1;
-
   muted: boolean = false;
-
   readerTask: ChildProcess | null = null;
-
   from: "file" | "muteAudio" = "muteAudio";
-
   constructor() {
     super();
     audioModule.on("muteAudio", (chunk) => {

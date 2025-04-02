@@ -6,6 +6,7 @@ import { loggerModule } from "./logger";
 import fs from "fs";
 import { botSettings } from "../settings/bot";
 import { fmModule } from "./fm";
+import { metadataSettings } from "../settings/metadata";
 
 class BotModule {
   bot: TelegramBot;
@@ -76,9 +77,11 @@ class BotModule {
     this.bot.onText(
       new RegExp(`^\/${botSettings.commands.start.command}$`, "i"),
       (message) => {
-        let text = `欢迎使用 BunFM! 🎉🎉🎉\n\n`;
-        text += `在线收听：${envSettings.getDomain()}\n`;
+        let text = `Welcome to ${metadataSettings.nickname}! 🎉🎉🎉\n\n`;
+        text += metadataSettings.description + "\n\n";
+        text += `版本号：v${metadataSettings.version}\n`;
         text += `服务已运行：${fmModule.getRunningTime()}\n\n`;
+        text += `在线收听：${envSettings.getDomain()}\n\n`;
         text += `命令列表：\n`;
         text += Object.values(botSettings.commands)
           .map((item) => {
