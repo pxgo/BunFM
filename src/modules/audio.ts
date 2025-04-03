@@ -89,8 +89,7 @@ class AudioModule extends EventEmitter<IEvents> {
       const clearTimer = () => {
         clearTimeout(timer);
       };
-      // 很蛋疼，网易云的mp3文件存在某种加密，ffmpeg在处理音频时会被卡住，读不出音频信息且ffmpeg进程也不退出。
-      // 所以添加了定时器，超过一定时间没有读取到数据就kill ffmpeg进程。
+
       const setTimer = () => {
         clearTimer();
         timer = setTimeout(() => {

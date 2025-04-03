@@ -6,23 +6,23 @@ class BotSettings {
   } = {
     start: {
       command: "start",
-      description: "显示欢迎信息",
+      description: "Display welcome message",
     },
     ls: {
       command: "ls",
-      description: "查看列表",
+      description: "List audio files",
     },
     rm: {
       command: "rm",
-      description: "删除指定序号的音频",
+      description: "Delete audio by index",
     },
     mute: {
       command: "mute",
-      description: "静音/取消静音",
+      description: "Toggle mute/unmute",
     },
     next: {
       command: "next",
-      description: "下一曲",
+      description: "Skip to next track",
     },
   };
 }
