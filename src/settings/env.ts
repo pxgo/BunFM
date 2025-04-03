@@ -10,7 +10,7 @@ class EnvSettings {
   botToken: string = process.env.BUN_FM_BOT_TOKEN || "";
   tmpDir: string = process.env.BUN_FM_TMP_DIR || "./tmp";
   mediaDir: string = process.env.BUN_FM_AUDIO_DIR || "./media";
-  randomOrder: boolean = process.env.BUN_FM_RANDOM_ORIGIN === "true";
+  randomOrder: boolean = !(process.env.BUN_FM_RANDOM_ORIGIN === "false");
   customDomain: string = process.env.BUN_FM_DOMAIN || "";
 
   constructor() {
