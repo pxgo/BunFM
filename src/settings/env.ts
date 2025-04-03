@@ -15,7 +15,7 @@ class EnvSettings {
 
   constructor() {
     if (!this.botToken) {
-      loggerModule.errorExit("No bot token provided");
+      loggerModule.info("No bot token provided");
     }
     this.tmpDir = this.fixDir(this.tmpDir);
     this.mediaDir = this.fixDir(this.mediaDir);

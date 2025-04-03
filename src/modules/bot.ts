@@ -1,4 +1,4 @@
-import TelegramBot from "node-telegram-bot-api";
+import TelegramBot, { Message } from "node-telegram-bot-api";
 import path from "path";
 import { envSettings } from "../settings/env";
 import { mediaModule } from "./media";
@@ -7,6 +7,8 @@ import fs from "fs";
 import { botSettings } from "../settings/bot";
 import { fmModule } from "./fm";
 import { metadataSettings } from "../settings/metadata";
+import { timeModule } from "./time";
+import dayjs from "dayjs";
 
 class BotModule {
   bot: TelegramBot;
@@ -79,10 +81,10 @@ class BotModule {
       (message) => {
         let text = `Welcome to ${metadataSettings.nickname}! 🎉🎉🎉\n\n`;
         text += metadataSettings.description + "\n\n";
-        text += `版本号：v${metadataSettings.version}\n`;
-        text += `服务已运行：${fmModule.getRunningTime()}\n\n`;
-        text += `在线收听：${envSettings.getDomain()}\n\n`;
-        text += `命令列表：\n`;
+        text += `Version：v${metadataSettings.version}\n`;
+        text += `Uptime：${fmModule.getRunningTime()}\n\n`;
+        text += `Live Stream：${envSettings.getDomain()}\n\n`;
+        text += `Commands：\n`;
         text += Object.values(botSettings.commands)
           .map((item) => {
             return `/${item.command} - ${item.description}`;
@@ -100,16 +102,16 @@ class BotModule {
         try {
           const medias = await mediaModule.getMediaNames();
           if (medias.length === 0) {
-            const text = `共找到 ${medias.length} 个音频文件。`;
+            const text = `Found ${medias.length} audio files.`; // 保持与删除命令相同的术语体系
             this.sendTextMessageSync(message.chat.id, text, message.message_id);
           } else {
             const perPage = 20;
             for (let i = 0; i < medias.length; i += perPage) {
               let text =
-                i === 0 ? `共找到 ${medias.length} 个音频文件: \n\n` : "";
+                i === 0 ? `Found ${medias.length} audio files: \n\n` : ""; // 冒号增强列表语义
               text += medias
                 .slice(i, i + perPage)
-                .map((name, index) => `[${i + index + 1}] ${name}`)
+                .map((name, index) => `[${i + index + 1}] ${name}`) // 保持序号格式一致性
                 .join("\n");
               await this.sendTextMessage(
                 message.chat.id,
@@ -157,7 +159,7 @@ class BotModule {
           const muted = await fmModule.mute();
           this.sendTextMessageSync(
             chatId,
-            muted ? "已设置静音" : `已取消静音`,
+            muted ? "Muted" : "Unmuted",
             message.message_id,
           );
         } catch (err) {
@@ -191,26 +193,29 @@ class BotModule {
   }
 
   initAudioMessage() {
-    this.bot.on("audio", async (message) => {
+    const handle = async (message: Message) => {
       const chatId = message.chat.id;
-      const audio = message.audio;
+      let audio = message.audio || message.voice;
       if (!audio) return;
       const fileId = audio.file_id;
       const messageId = message.message_id;
       // @ts-ignore
-      const fileName = audio.file_name;
+      const fileName = audio.file_name || `Voice_${message.date}.ogg`;
       try {
         const r = await this.sendTextMessage(
           chatId,
-          `正在下载音频文件，请稍后...`,
+          `Downloading audio file...`,
           messageId,
         );
         const mediaNames = await mediaModule.getMediaNames();
         if (mediaNames.includes(fileName)) {
-          await this.bot.editMessageText(`下载已取消，存在同名文件。`, {
-            chat_id: chatId,
-            message_id: r.message_id,
-          });
+          await this.bot.editMessageText(
+            `⚠️ Download rejected: [${fileName}] already exists.`,
+            {
+              chat_id: chatId,
+              message_id: r.message_id,
+            },
+          );
           return;
         }
         const tmpFilePath = await this.bot.downloadFile(
@@ -220,14 +225,16 @@ class BotModule {
         const mediaFilePath = path.resolve(envSettings.mediaDir, fileName);
         await fs.promises.rename(tmpFilePath, mediaFilePath);
 
-        await this.bot.editMessageText(`文件下载成功。`, {
+        await this.bot.editMessageText(`✅ File stored: ${fileName}`, {
           chat_id: chatId,
           message_id: r.message_id,
         });
       } catch (err) {
         this.sendErrorMessageSync(chatId, err as Error, message.message_id);
       }
-    });
+    };
+    this.bot.on("voice", handle);
+    this.bot.on("audio", handle);
   }
 }
 

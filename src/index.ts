@@ -22,9 +22,15 @@ app.get("/*", async (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
+  res.write(fmModule.audioBufferCache);
+
   const onFMData = (buffer: Buffer) => {
     if (res.writable) {
-      res.write(buffer);
+      res.write(buffer, (err) => {
+        if (err) {
+          loggerModule.error(err);
+        }
+      });
     }
   };
   fmModule.on("fmData", onFMData);
@@ -41,7 +47,9 @@ app.listen(envSettings.port, envSettings.host, async () => {
     loggerModule.info(
       `Server is running at http://${envSettings.host}:${envSettings.port}.`,
     );
-    await botModule.init();
+    if (envSettings.botToken) {
+      await botModule.init();
+    }
     await audioModule.init();
     await fmModule.init();
   } catch (err) {

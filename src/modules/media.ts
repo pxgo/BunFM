@@ -27,11 +27,11 @@ class MediaModule {
   async getMediaByOrderString(order: string) {
     const orderNumber = parseInt(order);
     if (isNaN(orderNumber)) {
-      throw new Error("文件序号格式错误。");
+      throw new Error("Invalid index format.");
     }
     const medias = await this.getMediasInfo();
     if (orderNumber < 1 || orderNumber > medias.length) {
-      throw new Error("文件序号无效。");
+      throw new Error("Invalid index.");
     }
     return medias[orderNumber - 1];
   }

@@ -19,10 +19,23 @@ class FMModule extends EventEmitter<IEvents> {
   muted: boolean = false;
   readerTask: ChildProcess | null = null;
   from: "file" | "muteAudio" = "muteAudio";
+  audioBufferCache: Buffer = Buffer.allocUnsafe(100 * 1024);
   constructor() {
     super();
     audioModule.on("muteAudio", (chunk) => {
       this.emitFMData("muteAudio", chunk);
+    });
+
+    this.on("fmData", (chunk) => {
+      const chunkLen = chunk.length;
+      const cacheLen = this.audioBufferCache.length;
+
+      if (chunkLen < cacheLen) {
+        this.audioBufferCache.copyWithin(0, chunkLen);
+        chunk.copy(this.audioBufferCache, cacheLen - chunkLen);
+      } else {
+        chunk.copy(this.audioBufferCache, 0, chunkLen - cacheLen, chunkLen);
+      }
     });
   }
 
