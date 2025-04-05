@@ -43,15 +43,17 @@ or browser: `http://127.0.0.1:7080`
 
 ### Environment Variables
 
-| Environment Variables  | Description              | Default                |
-| ---------------------- | ------------------------ |------------------------|
-| `BUN_FM_HOST`          | Binding host address     | `127.0.0.1`            |
-| `BUN_FM_PORT`          | HTTP service port        | `7080`                 |
-| `BUN_FM_BOT_TOKEN`     | Telegram Bot Token       |
-| `BUN_FM_TMP_DIR`       | Temporary file storage   | `./tmp`                |
-| `BUN_FM_AUDIO_DIR`     | Persistent audio storage | `./media`              |
-| `BUN_FM_RANDOM_ORIGIN` | Enable random playback   | `true`                 |
-| `BUN_FM_DOMAIN`        | Public domain            | `http://[host]:[port]` |
+| Environment Variables | Description                               | Default                |
+| --------------------- | ----------------------------------------- | ---------------------- |
+| `BUN_FM_HOST`         | Binding host address                      | `127.0.0.1`            |
+| `BUN_FM_PORT`         | HTTP service port                         | `7080`                 |
+| `BUN_FM_BOT_TOKEN`    | Telegram Bot Token                        |
+| `BUN_FM_TMP_DIR`      | Temporary file storage                    | `./tmp`                |
+| `BUN_FM_AUDIO_DIR`    | Persistent audio storage                  | `./media`              |
+| `BUN_FM_RANDOM`       | Enable random playback                    | `true`                 |
+| `BUN_FM_DOMAIN`       | Public domain                             | `http://[host]:[port]` |
+| `BUN_FM_BUFFER_SIZE`  | Audio buffer size                         | `100KB`                |
+| `BUN_FM_AUTO_REMOVE`  | Enable automatic deletion of played files | `false`                |
 
 ### Telegram Bot Integration
 

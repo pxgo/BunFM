@@ -30,7 +30,6 @@ class FMModule extends EventEmitter<IEvents> {
     this.on("fmData", (chunk) => {
       const chunkLen = chunk.length;
       const cacheLen = this.audioBufferCache.length;
-
       if (chunkLen < cacheLen) {
         this.audioBufferCache.copyWithin(0, chunkLen);
         chunk.copy(this.audioBufferCache, cacheLen - chunkLen);
