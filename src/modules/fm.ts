@@ -7,6 +7,7 @@ import { audioModule } from "./audio";
 import { ChildProcess } from "child_process";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
+import fs from "fs";
 dayjs.extend(duration);
 
 interface IEvents {
@@ -19,7 +20,7 @@ class FMModule extends EventEmitter<IEvents> {
   muted: boolean = false;
   readerTask: ChildProcess | null = null;
   from: "file" | "muteAudio" = "muteAudio";
-  audioBufferCache: Buffer = Buffer.allocUnsafe(100 * 1024);
+  audioBufferCache: Buffer = Buffer.allocUnsafe(envSettings.bufferSize);
   constructor() {
     super();
     audioModule.on("muteAudio", (chunk) => {
@@ -99,6 +100,10 @@ class FMModule extends EventEmitter<IEvents> {
             this.emitFMData("file", buffer);
           },
         );
+
+        if (envSettings.autoRemove) {
+          await fs.promises.unlink(mediaInfo.filePath);
+        }
       } catch (err) {
         this.from = "muteAudio";
         loggerModule.error(err);
@@ -110,7 +115,7 @@ class FMModule extends EventEmitter<IEvents> {
   resetMediaIndex(mediaCount: number) {
     let nextMediaIndex: number;
     if (envSettings.randomOrder) {
-      nextMediaIndex = Math.floor(Math.random() * (mediaCount + 1));
+      nextMediaIndex = Math.floor(Math.random() * mediaCount);
     } else {
       if (this.currentMediaIndex + 1 >= mediaCount) {
         nextMediaIndex = 0;

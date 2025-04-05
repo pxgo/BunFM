@@ -12,6 +12,10 @@ class EnvSettings {
   mediaDir: string = process.env.BUN_FM_AUDIO_DIR || "./media";
   randomOrder: boolean = !(process.env.BUN_FM_RANDOM_ORIGIN === "false");
   customDomain: string = process.env.BUN_FM_DOMAIN || "";
+  bufferSize: number = parseInt(
+    process.env.BUN_FM_BUFFER_SIZE || `${1024 * 100}`,
+  );
+  autoRemove: boolean = process.env.BUN_FM_AUTO_REMOVE === "true";
 
   constructor() {
     if (!this.botToken) {
