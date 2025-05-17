@@ -3,7 +3,7 @@
 **BunFM** is a real-time audio streaming service built with Node.js, enabling synchronized playback across multiple clients and controllable via Telegram Bot.
 
 <center>
-<img style="width:250px;height:250px;" src="https://github.com/pxgo/bun-fm/blob/main/public/icon.jpg?raw=true"/ >
+<img style="width:600px;height:1137px;" src="https://github.com/pxgo/bun-fm/blob/main/public/tg.png?raw=true"/>
 </center>
 
 ## Features ✨
